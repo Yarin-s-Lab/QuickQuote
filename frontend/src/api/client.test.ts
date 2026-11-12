@@ -1,0 +1,66 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { ApiError, getProducts, previewQuote } from "./client";
+import { PREVIEW, PRODUCTS } from "../test-fixtures";
+
+function mockFetch(status: number, body: unknown) {
+  const fn = vi.fn().mockResolvedValue(
+    new Response(typeof body === "string" ? body : JSON.stringify(body), {
+      status,
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
+  vi.stubGlobal("fetch", fn);
+  return fn;
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("api client", () => {
+  it("loads and validates products", async () => {
+    const fetchMock = mockFetch(200, PRODUCTS);
+    const data = await getProducts();
+    expect(fetchMock).toHaveBeenCalledWith("/api/products", undefined);
+    expect(data.products.map((p) => p.code)).toEqual(["car", "apartment"]);
+  });
+
+  it("posts the preview request as JSON", async () => {
+    const fetchMock = mockFetch(200, PREVIEW);
+    const payload = { product: "car" as const, inputs: { driver_age: 30 }, coverages: ["glass"] };
+    const data = await previewQuote(payload);
+
+    expect(data.premium).toBe("6975");
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("/api/quotes/preview");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body)).toEqual(payload);
+  });
+
+  it("surfaces the Hebrew message from the error envelope", async () => {
+    mockFetch(422, { error: { code: "validation_error", message_he: "גיל הנהג: הערך חייב להיות לפחות 17" } });
+    await expect(previewQuote({ product: "car", inputs: {}, coverages: [] })).rejects.toMatchObject({
+      code: "validation_error",
+      message: "גיל הנהג: הערך חייב להיות לפחות 17",
+    });
+  });
+
+  it("handles a non-JSON error body", async () => {
+    mockFetch(500, "<html>oops</html>");
+    await expect(getProducts()).rejects.toMatchObject({ code: "http_error" });
+  });
+
+  it("rejects a response that does not match the contract", async () => {
+    mockFetch(200, { ...PREVIEW, premium: 6975 });
+    await expect(
+      previewQuote({ product: "car", inputs: {}, coverages: [] }),
+    ).rejects.toMatchObject({ code: "invalid_response" });
+  });
+
+  it("reports network failures in Hebrew", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+    const error = await getProducts().catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).message).toBe("לא ניתן להתחבר לשרת");
+  });
+});
