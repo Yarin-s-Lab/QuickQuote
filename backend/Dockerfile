@@ -1,4 +1,6 @@
-FROM python:3.12-slim
+# Pinned (Python patch + Debian release) so the PNG snapshot renders identically
+# on every machine and in CI. Bumping it may require an intentional snapshot update.
+FROM python:3.12.16-slim-trixie
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -34,7 +36,8 @@ RUN chown quickquote:quickquote /app
 USER quickquote
 
 ENV DATABASE_URL=sqlite:////data/quickquote.db \
-    STORAGE_DIR=/storage
+    STORAGE_DIR=/storage \
+    QQ_IN_DOCKER=1
 
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

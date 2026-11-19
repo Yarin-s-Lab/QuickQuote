@@ -16,6 +16,15 @@ from app.services.pdf_renderer import (
 FIXED_NOW = datetime(2026, 11, 19, 8, 30, tzinfo=UTC)
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--snapshot-update",
+        action="store_true",
+        default=False,
+        help="Rewrite snapshot files. Only for intentional design changes; explain in the commit.",
+    )
+
+
 def weasyprint_available() -> bool:
     try:
         import weasyprint  # noqa: F401

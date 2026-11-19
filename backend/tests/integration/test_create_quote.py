@@ -57,16 +57,17 @@ def test_create_quote_persists_and_writes_pdf(env):
 
     assert response.status_code == 201
     body = response.json()
+    download_url = body.pop("download_url")
     assert body == {
         "quote_number": "Q-2026-000001",
         "product": "car",
         "premium": "7175",  # 3500 x 1.5 x 1.3 = 6825, + 200 + 150
         "issued_at": "2026-11-19T08:30:00Z",
         "valid_until": "2026-12-19T08:30:00Z",
-        "download_url": None,
     }
 
     [quote] = rows(service, Quote)
+    assert download_url == f"/api/quotes/download/{quote.download_token}"
     assert quote.agent_name == "דנה כהן"  # trimmed
     assert quote.client_email is None  # blank -> None
     assert quote.coverages == ["towing", "glass"]  # catalog order

@@ -66,8 +66,8 @@ export const createQuoteResponseSchema = z.object({
   premium: decimalString,
   issued_at: z.string().datetime({ offset: true }),
   valid_until: z.string().datetime({ offset: true }),
-  /** null until secure download is added (level 3). */
-  download_url: z.string().nullable(),
+  /** Same-origin, token-based link; works until valid_until (then 410). */
+  download_url: z.string().regex(/^\/api\/quotes\/download\/[A-Za-z0-9_-]{43}$/),
 });
 export type CreateQuoteResponse = z.infer<typeof createQuoteResponseSchema>;
 

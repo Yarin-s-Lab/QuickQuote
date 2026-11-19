@@ -7,3 +7,4 @@ data
 storage
 Dockerfile
 .dockerignore
+backend/tests/snapshot/.failures

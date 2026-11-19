@@ -138,12 +138,19 @@ premium = (structure_part + contents_part) × floor_factor × alarm_factor + ת�
 תגובה `201`:
 ```json
 {"quote_number": "Q-2026-000001", "product": "car", "premium": "7175",
- "issued_at": "2026-11-19T08:30:00Z", "valid_until": "2026-12-19T08:30:00Z", "download_url": null}
+ "issued_at": "2026-11-19T08:30:00Z", "valid_until": "2026-12-19T08:30:00Z",
+ "download_url": "/api/quotes/download/<token>"}
 ```
-- `download_url` הוא `null` עד רמה 3 (הורדה מאובטחת לפי טוקן). הטוקן כבר נוצר ונשמר.
+- `download_url` הוא נתיב יחסי (same-origin) עם הטוקן. **זו הפעם היחידה שהטוקן נמסר** — הוא לא מוחזר ב-`GET /quotes/{n}`.
 - מספור, שמירה ו-PDF בטרנזקציה אחת: כישלון ברינדור או בשמירה — אין שורה, אין קובץ, והמספר לא נצרך.
 - `503 pdf_unavailable` כשמנוע ה-PDF (WeasyPrint/Pango) לא מותקן בשרת.
 - שנת המספור ותאריכי ה-PDF לפי שעון ישראל (`Asia/Jerusalem`); הזמנים ב-API ב-UTC.
+
+### `GET /quotes/download/{token}` (רמה 3)
+- חיפוש **לפי הטוקן בלבד**. טוקן שאינו בפורמט `secrets.token_urlsafe(32)` (‏43 תווים `[A-Za-z0-9_-]`) נדחה עוד לפני ה-DB.
+- `200` הקובץ · `404` טוקן לא תקין / לא קיים / קובץ חסר / נתיב שנבנה מה-`id` יוצא מ-`STORAGE_DIR` · `410` (`quote_expired`) אחרי `valid_until` (ההורדה עובדת עד הרגע הזה כולל). אותו קישור עובד שוב ושוב עד התוקף.
+- כותרות: `Content-Type: application/pdf`, `Content-Disposition: attachment; filename="{quote_number}.pdf"`, `Cache-Control: no-store`, `Referrer-Policy: no-referrer` (הטוקן ב-URL), `X-Content-Type-Options: nosniff` — כל אחת פעם אחת בדיוק (nginx לא מוסיף כותרות אבטחה ל-`/api/`).
+- אין הפניות `307` לנתיבים עם `/` בסוף — מקבלים `404`.
 
 ### `GET /quotes/{quote_number}` (רמה 2)
 מטא-דאטה: מספר, מוצר, סוכן ולקוח, `inputs`, `coverages`, `premium`, `breakdown`, `issued_at`, `valid_until`.

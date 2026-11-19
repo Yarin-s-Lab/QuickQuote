@@ -11,6 +11,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.domain.pricing.catalog import field_labels_he
 from app.services.pdf_renderer import PdfUnavailableError
+from app.services.quote_service import QuoteExpiredError
 
 _STATUS_MESSAGES_HE = {
     404: ("not_found", "המשאב לא נמצא"),
@@ -97,6 +98,13 @@ def install_error_handlers(app: FastAPI) -> None:
         return JSONResponse(
             status_code=503,
             content=error_body("pdf_unavailable", "יצירת PDF אינה זמינה בשרת זה"),
+        )
+
+    @app.exception_handler(QuoteExpiredError)
+    async def _expired(_: Request, __: QuoteExpiredError) -> JSONResponse:
+        return JSONResponse(
+            status_code=410,
+            content=error_body("quote_expired", "תוקף ההצעה פג ולא ניתן להוריד אותה"),
         )
 
     @app.exception_handler(Exception)

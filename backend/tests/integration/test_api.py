@@ -47,6 +47,12 @@ def test_health():
     assert client.get("/api/health").json() == {"status": "ok"}
 
 
+@pytest.mark.parametrize("path", ["/api/health", "/api/products", "/api/nope"])
+def test_nosniff_on_every_api_response(path):
+    response = client.get(path)
+    assert response.headers.get_list("x-content-type-options") == ["nosniff"]
+
+
 def test_products_lists_both_products_with_fields_and_coverages():
     body = client.get("/api/products").json()
     assert body["min_premium"] == "500"

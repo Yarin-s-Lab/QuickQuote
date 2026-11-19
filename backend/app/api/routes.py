@@ -3,6 +3,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import FileResponse
 
 from app.api.schemas import (
     CreateQuoteRequest,
@@ -43,6 +44,25 @@ def preview_quote(request: PreviewRequest) -> PreviewResponse:
 @router.post("/quotes", response_model=CreateQuoteResponse, status_code=201)
 def create_quote(request: CreateQuoteRequest, service: Service) -> CreateQuoteResponse:
     return service.create(request)
+
+
+@router.get("/quotes/download/{token}", response_class=FileResponse)
+def download_quote(token: str, service: Service) -> FileResponse:
+    download = service.get_download(token)
+    if download is None:
+        raise HTTPException(status_code=404)
+    return FileResponse(
+        download.path,
+        media_type="application/pdf",
+        filename=f"{download.quote_number}.pdf",
+        content_disposition_type="attachment",
+        headers={
+            # The token is in the URL: never cache it or leak it via Referer.
+            "Cache-Control": "no-store",
+            "Referrer-Policy": "no-referrer",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @router.get("/quotes/{quote_number}", response_model=QuoteMetadata)

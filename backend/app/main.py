@@ -2,7 +2,7 @@ from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.errors import install_error_handlers
@@ -40,13 +40,24 @@ def create_app(
         finally:
             db.dispose()
 
-    app = FastAPI(title="QuickQuote API", version="0.2.0", lifespan=lifespan)
+    app = FastAPI(title="QuickQuote API", version="0.3.0", lifespan=lifespan)
+    # No 307 "/x/" -> "/x" redirects: odd paths (e.g. download tokens ending in "/")
+    # get a plain 404 instead of being bounced to another route.
+    app.router.redirect_slashes = False
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[settings.frontend_origin],
         allow_methods=["GET", "POST"],
         allow_headers=["Content-Type"],
     )
+
+    @app.middleware("http")
+    async def security_headers(request: Request, call_next) -> Response:
+        response = await call_next(request)
+        # setdefault: routes that set their own value (the download) keep it, no duplicates.
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        return response
+
     install_error_handlers(app)
     app.include_router(router)
     return app
