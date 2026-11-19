@@ -12,9 +12,10 @@ backend/            FastAPI, Python 3.12
     domain/pricing/ מנוע הפרמיה (car.py, apartment.py) — פונקציות טהורות
     services/       quote_service, numbering, pdf_renderer, storage
     db/             מודלים ו-session (SQLAlchemy)
-    templates/      quote.html, quote.css
+    templates/      base.html + quote_car.html / quote_apartment.html (extends), _macros.html,
+                    quote.css (משותף) + quote_<product>.css (משתני צבע בלבד)
     fonts/          Noto Sans Hebrew
-  tests/            unit/, integration/, security/, snapshot/
+  tests/            unit/, integration/, security/, pdf/, snapshot/
 frontend/           React + TypeScript + Vite
   src/
     api/            client ל-API (fetch + טיפוסים)

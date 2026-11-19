@@ -1,5 +1,6 @@
 """SPEC section 7: user input reaches the PDF as literal text, never as markup or code."""
 
+import re
 from pathlib import Path
 
 import pytest
@@ -13,7 +14,7 @@ from app.services.pdf_renderer import (
     check_resource_url,
     fetch_resource,
 )
-from tests.conftest import make_document, requires_pdf
+from tests.conftest import PRODUCT_CODES, make_document, requires_pdf
 
 PAYLOADS = {
     "jinja": "{{7*7}}",
@@ -26,9 +27,10 @@ PAYLOADS = {
 }
 
 
-def render_with_everywhere(payload: str) -> str:
+def render_with_everywhere(payload: str, product: str = "car") -> str:
     return PdfRenderer().render_html(
         make_document(
+            product,
             agent_name=payload,
             client_full_name=payload,
             client_phone=payload,
@@ -37,11 +39,16 @@ def render_with_everywhere(payload: str) -> str:
     )
 
 
+def body_of(html: str) -> str:
+    """Everything after the opening <body ...> tag (the head legitimately has <link>s)."""
+    return html.split("<body", 1)[1].split(">", 1)[1]
+
+
+@pytest.mark.parametrize("product", PRODUCT_CODES)
 @pytest.mark.parametrize("name", PAYLOADS)
-def test_payload_is_escaped_in_html(name):
+def test_payload_is_escaped_in_html(name, product):
     payload = PAYLOADS[name]
-    html = render_with_everywhere(payload)
-    body = html.split("<body>", 1)[1]
+    body = body_of(render_with_everywhere(payload, product))
 
     # No raw markup from the payload survives.
     for raw in ("<script", "<img", "<link", "<style", "<b "):
@@ -50,15 +57,28 @@ def test_payload_is_escaped_in_html(name):
     assert "XXX" not in body
 
 
-def test_jinja_expression_stays_literal():
-    html = render_with_everywhere("{{7*7}}")
+@pytest.mark.parametrize("product", PRODUCT_CODES)
+def test_jinja_expression_stays_literal(product):
+    html = render_with_everywhere("{{7*7}}", product)
     assert html.count("{{7*7}}") == 4
     assert ">49<" not in html
 
 
-def test_escaped_forms_present():
-    html = render_with_everywhere("<script>alert(1)</script>")
+@pytest.mark.parametrize("product", PRODUCT_CODES)
+def test_escaped_forms_present(product):
+    html = render_with_everywhere("<script>alert(1)</script>", product)
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html
+
+
+@pytest.mark.parametrize("product", PRODUCT_CODES)
+def test_only_expected_head_resources(product):
+    """The only external references are our own two stylesheets; no user data in <head>."""
+    html = render_with_everywhere('"><link href="http://x">', product)
+    head = html.split("<body", 1)[0]
+    assert sorted(re.findall(r'href="([^"]*)"', head)) == sorted(
+        ["quote.css", f"quote_{product}.css"]
+    )
+    assert "src=" not in html
 
 
 def test_renderer_has_no_from_string_and_autoescape_on():
@@ -73,9 +93,24 @@ def test_renderer_has_no_from_string_and_autoescape_on():
     assert ".from_string(" not in source
 
 
-def test_template_does_not_use_safe_filter():
-    for template in TEMPLATES_DIR.glob("*.html"):
-        assert "|safe" not in template.read_text(encoding="utf-8").replace(" ", "")
+def test_templates_do_not_use_safe_filter():
+    templates = sorted(TEMPLATES_DIR.glob("*.html"))
+    assert {t.name for t in templates} >= {"base.html", "quote_car.html", "quote_apartment.html"}
+    for template in templates:
+        text = template.read_text(encoding="utf-8").replace(" ", "")
+        assert "|safe" not in text, template.name
+        assert "autoescapefalse" not in text, template.name
+
+
+def test_css_only_references_local_fonts():
+    """Every url() in our CSS is a bundled font; no remote or @import resources."""
+    for css in sorted(TEMPLATES_DIR.glob("*.css")):
+        text = css.read_text(encoding="utf-8")
+        assert "@import" not in text, css.name
+        for url in re.findall(r"url\(([^)]*)\)", text):
+            target = (TEMPLATES_DIR / url.strip("\"' ")).resolve()
+            assert target.is_relative_to(FONTS_DIR), (css.name, url)
+            assert target.is_file(), (css.name, url)
 
 
 # ---------- url_fetcher ----------

@@ -9,10 +9,12 @@ Security rules (do not relax):
 from __future__ import annotations
 
 import mimetypes
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 from urllib.parse import unquote, urlparse
 from urllib.request import url2pathname
@@ -25,7 +27,26 @@ APP_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = APP_DIR / "templates"
 FONTS_DIR = APP_DIR / "fonts"
 ALLOWED_RESOURCE_DIRS = (TEMPLATES_DIR, FONTS_DIR)
-TEMPLATE_NAME = "quote.html"
+
+# Product code -> template. Fixed on the server; a template name never comes from
+# user input. Both templates extend base.html (SPEC section 6 / bonus section 10).
+PRODUCT_TEMPLATES: Mapping[str, str] = MappingProxyType(
+    {
+        "car": "quote_car.html",
+        "apartment": "quote_apartment.html",
+    }
+)
+
+
+class UnknownProductError(ValueError):
+    """No template for this product code. Never fall back silently to another one."""
+
+
+def template_for(product: str) -> str:
+    try:
+        return PRODUCT_TEMPLATES[product]
+    except (KeyError, TypeError):
+        raise UnknownProductError(f"no quote template for product {product!r}") from None
 
 
 class PdfUnavailableError(RuntimeError):
@@ -136,6 +157,7 @@ class DocumentFactor:
 
 @dataclass(frozen=True)
 class DocumentField:
+    name: str  # input field name, e.g. "driver_age"; the product template places it
     label_he: str
     value: str
     ltr: bool = False  # numbers/amounts: force LTR so signs and separators never flip
@@ -145,6 +167,7 @@ class DocumentField:
 class QuoteDocument:
     """Everything the template shows. All strings are treated as untrusted."""
 
+    product: str  # product code; selects the template via PRODUCT_TEMPLATES
     quote_number: str
     product_label_he: str
     issued_at: datetime
@@ -160,6 +183,10 @@ class QuoteDocument:
     premium_before_rounding: Decimal
     premium: Decimal
     minimum_applied: bool
+
+    @property
+    def fields_by_name(self) -> dict[str, DocumentField]:
+        return {field.name: field for field in self.fields}
 
 
 def _build_environment() -> Environment:
@@ -181,7 +208,7 @@ class PdfRenderer:
         self._env = _build_environment()
 
     def render_html(self, document: QuoteDocument) -> str:
-        return self._env.get_template(TEMPLATE_NAME).render(q=document)
+        return self._env.get_template(template_for(document.product)).render(q=document)
 
     def render_pdf(self, html: str) -> bytes:
         try:

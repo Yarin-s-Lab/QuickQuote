@@ -1,0 +1,26 @@
+{#
+  Shared helpers for the product templates. Imported explicitly
+  ({% import "_macros.html" as m %}) because blocks in a child template cannot
+  see macros defined inside base.html.
+#}
+
+{# One input field as a table row. Numeric values are forced LTR (SPEC section 6). #}
+{% macro field_row(q, name) %}
+{% set field = q.fields_by_name[name] %}
+      <tr data-field="{{ field.name }}">
+        <th>{{ field.label_he }}</th>
+        <td><bdi{% if field.ltr %} dir="ltr"{% endif %}>{{ field.value }}</bdi></td>
+      </tr>
+{% endmacro %}
+
+{# A titled group of fields (one column of .field-groups). #}
+{% macro field_group(q, title, names) %}
+    <div class="field-group-col">
+    <h3 class="field-group">{{ title }}</h3>
+    <table class="fields">
+{% for name in names %}
+{{ field_row(q, name) }}
+{% endfor %}
+    </table>
+    </div>
+{% endmacro %}

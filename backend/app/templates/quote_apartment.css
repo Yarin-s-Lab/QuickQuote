@@ -1,0 +1,5 @@
+/* apartment: only overrides the accent variables defined in quote.css. */
+:root {
+  --accent: #2e7d4f;
+  --accent-soft: #e6f2ea;
+}

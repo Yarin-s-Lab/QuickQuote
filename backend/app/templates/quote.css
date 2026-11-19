@@ -21,11 +21,19 @@
   font-weight: 700;
 }
 
+/* Accent colours. Defaults here; quote_<product>.css overrides only these variables. */
+:root {
+  --accent: #1f5fbf;
+  --accent-soft: #e8eef9;
+}
+
 @page {
   size: A4;
-  margin: 18mm 16mm 20mm;
+  margin: 14mm 16mm 16mm;
   @bottom-center {
+    /* LTR, or the RTL page flips "1 / 2" into "2 / 1" (same bidi rule as <bdi dir="ltr">). */
     content: counter(page) " / " counter(pages);
+    direction: ltr;
     font-family: "QQ Latin";
     font-size: 8pt;
     color: #7a8494;
@@ -51,11 +59,11 @@ h1 {
 h2 {
   font-size: 11.5pt;
   margin: 0 0 6pt;
-  color: #1f5fbf;
+  color: var(--accent);
 }
 
 section {
-  margin-bottom: 14pt;
+  margin-bottom: 10pt;
 }
 
 table {
@@ -66,7 +74,7 @@ table {
 th,
 td {
   text-align: right;
-  padding: 4pt 6pt;
+  padding: 3pt 6pt;
   border-bottom: 0.5pt solid #e1e6ee;
   vertical-align: top;
 }
@@ -80,15 +88,15 @@ th {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  border-bottom: 2pt solid #1f5fbf;
+  border-bottom: 2pt solid var(--accent);
   padding-bottom: 6pt;
-  margin-bottom: 14pt;
+  margin-bottom: 10pt;
 }
 
 .logo {
   font-size: 18pt;
   font-weight: 700;
-  color: #1f5fbf;
+  color: var(--accent);
 }
 
 .tagline {
@@ -112,7 +120,12 @@ th {
 }
 
 .party {
-  flex: 1;
+  /* Equal halves that never grow with their content: without min-width: 0 a long
+     unbreakable value (e.g. a 100-char email) widened its box past the page edge. */
+  flex: 1 1 0;
+  min-width: 0;
+  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
   background: #f4f6f9;
   padding: 8pt 10pt;
   border-radius: 4pt;
@@ -148,7 +161,7 @@ th {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  background: #1f5fbf;
+  background: var(--accent);
   color: #fff;
   padding: 10pt 12pt;
   border-radius: 4pt;
@@ -164,10 +177,59 @@ th {
 }
 
 .disclaimer {
-  margin-top: 18pt;
+  margin-top: 12pt;
   padding-top: 6pt;
   border-top: 0.5pt solid #c8d0db;
   color: #5b6778;
   font-size: 9pt;
   text-align: center;
+}
+
+/* Product section: icon, badge and field groups (filled by the product templates). */
+.product-heading {
+  display: flex;
+  align-items: center;
+  gap: 6pt;
+}
+
+.product-icon {
+  color: var(--accent);
+  display: inline-flex;
+}
+
+.product-icon .icon {
+  width: 14pt;
+  height: 14pt;
+}
+
+.badge {
+  font-size: 8.5pt;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 8pt;
+  padding: 1pt 7pt;
+}
+
+/* Field groups sit side by side; in RTL the first group is on the right. */
+.field-groups {
+  display: flex;
+  gap: 18pt;
+}
+
+.field-group-col {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.field-group {
+  font-size: 9.5pt;
+  color: #3d4757;
+  margin: 4pt 0 2pt;
+}
+
+/* If an extreme quote ever needs a second page, never strand the total on its own. */
+.total,
+.note {
+  break-inside: avoid;
 }
