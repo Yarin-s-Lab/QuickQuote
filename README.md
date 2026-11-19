@@ -1,6 +1,6 @@
 # QuickQuote — מחולל הצעות מחיר
 
-[![CI](https://github.com/talShporenMadanes/QuickQuote/actions/workflows/ci.yml/badge.svg)](https://github.com/talShporenMadanes/QuickQuote/actions/workflows/ci.yml)
+[![CI](https://github.com/Yarin-s-Lab/QuickQuote/actions/workflows/ci.yml/badge.svg)](https://github.com/Yarin-s-Lab/QuickQuote/actions/workflows/ci.yml)
 
 סוכן ביטוח ממלא טופס קצר ומקבל הצעת מחיר בעברית, כקובץ PDF מוכן לשליחה ללקוח.
 האפיון המלא: [`SPEC.md`](SPEC.md). כללי עבודה: [`CLAUDE.md`](CLAUDE.md).
