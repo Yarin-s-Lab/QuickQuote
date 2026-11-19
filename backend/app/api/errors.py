@@ -11,7 +11,11 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.domain.pricing.catalog import field_labels_he
 from app.services.pdf_renderer import PdfUnavailableError
-from app.services.quote_service import QuoteExpiredError
+from app.services.quote_service import (
+    ComparisonRequestError,
+    QuoteExpiredError,
+    QuoteNotFoundError,
+)
 
 _STATUS_MESSAGES_HE = {
     404: ("not_found", "המשאב לא נמצא"),
@@ -26,6 +30,7 @@ _GENERIC_LABELS_HE = {
     "client_full_name": "שם הלקוח",
     "client_phone": "טלפון",
     "client_email": 'דוא"ל',
+    "tokens": "הצעות להשוואה",
 }
 
 
@@ -106,6 +111,14 @@ def install_error_handlers(app: FastAPI) -> None:
             status_code=410,
             content=error_body("quote_expired", "תוקף ההצעה פג ולא ניתן להוריד אותה"),
         )
+
+    @app.exception_handler(QuoteNotFoundError)
+    async def _quote_not_found(_: Request, __: QuoteNotFoundError) -> JSONResponse:
+        return JSONResponse(status_code=404, content=error_body("not_found", "ההצעה לא נמצאה"))
+
+    @app.exception_handler(ComparisonRequestError)
+    async def _comparison(_: Request, exc: ComparisonRequestError) -> JSONResponse:
+        return JSONResponse(status_code=422, content=error_body("validation_error", exc.message_he))
 
     @app.exception_handler(Exception)
     async def _unexpected(_: Request, __: Exception) -> JSONResponse:

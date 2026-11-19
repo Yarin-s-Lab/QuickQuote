@@ -82,3 +82,24 @@ def test_pdf_page1_matches_png_snapshot(
             f"PNG snapshot mismatch for {name}: {ratio:.2%} of pixels changed "
             f"(limit {MAX_CHANGED_RATIO:.2%}). See {failures_dir}."
         )
+
+
+def test_comparison_page1_matches_png_snapshot(
+    render_comparison, snapshot_update, failures_dir, tmp_path
+):
+    pdf = render_comparison(real_pdf=True).pdf
+    assert pdf is not None
+    actual = pdf_page1_png(pdf, tmp_path)
+    path = SNAPSHOT_DIR / "compare.png"
+    if snapshot_update:
+        path.write_bytes(actual)
+        return
+    assert path.exists(), missing_snapshot_message(path)
+    ratio, diff = compare(path.read_bytes(), actual)
+    if ratio > MAX_CHANGED_RATIO:
+        (failures_dir / "compare.actual.png").write_bytes(actual)
+        if diff is not None:
+            diff.point(lambda v: 255 if v > PIXEL_THRESHOLD else 0).save(
+                failures_dir / "compare.diff.png"
+            )
+        pytest.fail(f"PNG snapshot mismatch for compare: {ratio:.2%} of pixels changed")

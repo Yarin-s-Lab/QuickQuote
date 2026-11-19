@@ -1,14 +1,16 @@
 <!doctype html>
 {#
-  Shared layout for every quote. Product templates (quote_car.html,
-  quote_apartment.html) extend it and fill only the product blocks.
+  Shared layout for every document. Product templates (quote_car.html,
+  quote_apartment.html) extend it and fill only the product blocks;
+  compare.html replaces the whole "content" block and keeps the shell
+  (head, fonts, header, disclaimer).
   Security (SPEC section 7): autoescape is on; user data enters only as variables;
   user data is never marked safe. Resources load only through the restricted url_fetcher.
 #}
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <title>הצעת מחיר {{ q.quote_number }}</title>
+  <title>{% block title %}הצעת מחיר {{ q.quote_number }}{% endblock %}</title>
   <link rel="stylesheet" href="quote.css">
   {% block product_css %}{% endblock %}
 </head>
@@ -18,6 +20,7 @@
     <div class="tagline">{% block subtitle %}הצעת מחיר לביטוח{% endblock %}</div>
   </header>
 
+  {% block content %}
   <section class="title">
     <h1>הצעת מחיר מספר <bdi dir="ltr" class="quote-number">{{ q.quote_number }}</bdi></h1>
     <table class="dates">
@@ -93,6 +96,7 @@
   {% if q.minimum_applied %}
   <p class="note">הוחלה פרמיה מינימלית.</p>
   {% endif %}
+  {% endblock %}
 
   <footer class="disclaimer">הצעה לדוגמה — לא מחייבת.</footer>
 </body>

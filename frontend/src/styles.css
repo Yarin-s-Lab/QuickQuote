@@ -176,3 +176,46 @@ legend {
 .disclaimer {
   color: #5b6778;
 }
+
+.comparison {
+  margin-top: 20px;
+}
+
+.comparison h2 {
+  margin-top: 0;
+}
+
+.comparison-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.comparison .pick {
+  margin-inline-start: 8px;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: #1f5fbf;
+}
+
+.comparison input:disabled + bdi {
+  opacity: 0.5;
+}
+
+.comparison button.primary {
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 28px;
+  border-radius: 8px;
+  border: 0;
+  background: #1f5fbf;
+  color: #fff;
+  cursor: pointer;
+}
+
+.comparison button.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -71,6 +71,16 @@ export const createQuoteResponseSchema = z.object({
 });
 export type CreateQuoteResponse = z.infer<typeof createQuoteResponseSchema>;
 
+/** POST /api/quotes/compare body: exactly two download tokens, first = quote A (right side). */
+export interface CompareRequest {
+  tokens: [string, string];
+}
+
+/** Token part of a download_url ("/api/quotes/download/<token>"). */
+export function tokenFromDownloadUrl(downloadUrl: string): string {
+  return downloadUrl.slice(downloadUrl.lastIndexOf("/") + 1);
+}
+
 export const apiErrorSchema = z.object({
   error: z.object({ code: z.string(), message_he: z.string() }),
 });

@@ -149,6 +149,31 @@ describe("QuotePage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("יצירת PDF אינה זמינה בשרת זה");
   });
 
+  it("remembers quotes created in this session and offers a comparison", async () => {
+    const second = { ...CREATED, quote_number: "Q-2026-000002", download_url: "/api/quotes/download/" + "U".repeat(43) };
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(json(200, PRODUCTS))
+        .mockResolvedValueOnce(json(201, CREATED))
+        .mockResolvedValueOnce(json(201, second)),
+    );
+    const user = userEvent.setup();
+    render(<QuotePage />);
+
+    await user.type(await screen.findByLabelText("שם הסוכן"), "דנה");
+    await user.type(screen.getByLabelText("שם הלקוח"), "ישראל");
+    await user.click(screen.getByRole("button", { name: "צור הצעה" }));
+    await screen.findByTestId("quote-number");
+    expect(screen.queryByRole("heading", { name: "השוואת הצעות" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "צור הצעה" }));
+    expect(await screen.findByRole("heading", { name: "השוואת הצעות" })).toBeInTheDocument();
+    expect(screen.getByLabelText("הצעה Q-2026-000001")).toBeEnabled();
+    expect(screen.getByLabelText("הצעה Q-2026-000002")).toBeEnabled();
+  });
+
   it("renders right-to-left content", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(json(200, PRODUCTS)));
     render(<QuotePage />);

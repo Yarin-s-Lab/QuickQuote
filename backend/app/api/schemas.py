@@ -122,6 +122,15 @@ class QuoteMetadata(BaseModel):
     valid_until: datetime
 
 
+class CompareRequest(BaseModel):
+    """POST /quotes/compare. Tokens travel in the body so they stay out of URLs and logs.
+    Count, duplicates and token format are checked by the service (404/410/422 rules)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    tokens: list[Annotated[str, StringConstraints(max_length=100)]] = Field(max_length=10)
+
+
 class BreakdownLineOut(BaseModel):
     code: str
     label_he: str

@@ -233,3 +233,54 @@ th {
 .note {
   break-inside: avoid;
 }
+
+/* Comparison document (compare.html). */
+.generated {
+  margin: 0;
+  color: #5b6778;
+}
+
+.compare-table thead th {
+  font-weight: 700;
+  color: var(--accent);
+  border-bottom: 1.5pt solid var(--accent);
+  vertical-align: bottom;
+}
+
+.compare-table .label-col {
+  width: 30%;
+}
+
+.compare-table .quote-col {
+  width: 35%;
+}
+
+.compare-table td {
+  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.compare-table tr.differs td,
+.compare-table tr.differs th {
+  background: var(--accent-soft);
+  font-weight: 700;
+}
+
+.legend {
+  font-size: 8.5pt;
+  color: #5b6778;
+  margin: 4pt 0 0;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 8pt;
+  height: 8pt;
+  background: var(--accent-soft);
+  border: 0.5pt solid var(--accent);
+  vertical-align: middle;
+}
+
+.compare-summary strong {
+  font-size: 13pt;
+}

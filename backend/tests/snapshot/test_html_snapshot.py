@@ -43,6 +43,28 @@ def test_rendered_html_matches_snapshot(name, render_sample, snapshot_update, fa
         pytest.fail(f"HTML snapshot mismatch for {name}:\n{diff[:4000]}")
 
 
+def test_comparison_html_matches_snapshot(render_comparison, snapshot_update, failures_dir):
+    actual = _normalize(render_comparison().html)
+    path = SNAPSHOT_DIR / "compare.html"
+    if snapshot_update:
+        path.write_text(actual, encoding="utf-8", newline="\n")
+        return
+    assert path.exists(), missing_snapshot_message(path)
+    expected = _normalize(path.read_text(encoding="utf-8"))
+    if actual != expected:
+        (failures_dir / "compare.actual.html").write_text(actual, encoding="utf-8", newline="\n")
+        diff = "".join(
+            difflib.unified_diff(
+                expected.splitlines(keepends=True), actual.splitlines(keepends=True), n=2
+            )
+        )
+        pytest.fail(f"HTML snapshot mismatch for compare:\n{diff[:4000]}")
+
+
+def test_comparison_is_deterministic(render_comparison):
+    assert render_comparison().html == render_comparison().html
+
+
 def test_snapshots_are_deterministic(render_sample):
     """Two runs must be byte-identical, or the snapshot would be flaky."""
     assert render_sample("car").html == render_sample("car").html

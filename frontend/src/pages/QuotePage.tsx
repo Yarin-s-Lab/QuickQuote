@@ -12,6 +12,7 @@ import {
 import { CoverageList } from "../components/CoverageList";
 import { PartiesFields, type PartiesErrors } from "../components/PartiesFields";
 import { PremiumPreview } from "../components/PremiumPreview";
+import { QuoteComparison } from "../components/QuoteComparison";
 import { QuoteCreated } from "../components/QuoteCreated";
 import { ProductFields, type FieldValues } from "../components/ProductFields";
 import { ProductSelector } from "../components/ProductSelector";
@@ -75,6 +76,8 @@ export function QuotePage() {
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [created, setCreated] = useState<CreateQuoteResponse | null>(null);
+  // Quotes created in this session, for the comparison. State only: gone on reload.
+  const [sessionQuotes, setSessionQuotes] = useState<CreateQuoteResponse[]>([]);
   const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -157,6 +160,7 @@ export function QuotePage() {
         ...parties,
       });
       setCreated(result);
+      setSessionQuotes((prev) => [...prev, result]);
     } catch (err) {
       setCreateError(err instanceof ApiError ? err.message : "שגיאה לא צפויה");
     } finally {
@@ -218,6 +222,10 @@ export function QuotePage() {
         )}
       </form>
       {created && <QuoteCreated quote={created} />}
+      <QuoteComparison
+        quotes={sessionQuotes}
+        productLabels={Object.fromEntries(products.map((p) => [p.code, p.label_he]))}
+      />
       {preview && <PremiumPreview preview={preview} stale={stale} />}
     </main>
   );
