@@ -1,8 +1,19 @@
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
+from app.config import Settings
+from app.main import create_app
 
+# Explicit settings: independent of FRONTEND_ORIGIN etc. in the environment (e.g. compose).
+app = create_app(
+    Settings(
+        database_url="sqlite:///:memory:",
+        storage_dir=Path("unused-storage"),
+        frontend_origin="http://localhost:5173",
+    )
+)
 client = TestClient(app)
 
 CAR = {

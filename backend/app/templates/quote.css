@@ -1,0 +1,173 @@
+/* Fonts are embedded from app/fonts (never a CDN: the PDF must build offline).
+   Noto Sans Hebrew has no digits or Latin, so Noto Sans is the per-glyph fallback. */
+@font-face {
+  font-family: "QQ Hebrew";
+  src: url("../fonts/NotoSansHebrew-Regular.ttf");
+  font-weight: 400;
+}
+@font-face {
+  font-family: "QQ Hebrew";
+  src: url("../fonts/NotoSansHebrew-Bold.ttf");
+  font-weight: 700;
+}
+@font-face {
+  font-family: "QQ Latin";
+  src: url("../fonts/NotoSans-Regular.ttf");
+  font-weight: 400;
+}
+@font-face {
+  font-family: "QQ Latin";
+  src: url("../fonts/NotoSans-Bold.ttf");
+  font-weight: 700;
+}
+
+@page {
+  size: A4;
+  margin: 18mm 16mm 20mm;
+  @bottom-center {
+    content: counter(page) " / " counter(pages);
+    font-family: "QQ Latin";
+    font-size: 8pt;
+    color: #7a8494;
+  }
+}
+
+html {
+  font-family: "QQ Hebrew", "QQ Latin";
+  font-size: 10.5pt;
+  color: #1c2430;
+  line-height: 1.45;
+}
+
+body {
+  margin: 0;
+}
+
+h1 {
+  font-size: 17pt;
+  margin: 0 0 6pt;
+}
+
+h2 {
+  font-size: 11.5pt;
+  margin: 0 0 6pt;
+  color: #1f5fbf;
+}
+
+section {
+  margin-bottom: 14pt;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  text-align: right;
+  padding: 4pt 6pt;
+  border-bottom: 0.5pt solid #e1e6ee;
+  vertical-align: top;
+}
+
+th {
+  font-weight: 400;
+  color: #3d4757;
+}
+
+.brand {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 2pt solid #1f5fbf;
+  padding-bottom: 6pt;
+  margin-bottom: 14pt;
+}
+
+.logo {
+  font-size: 18pt;
+  font-weight: 700;
+  color: #1f5fbf;
+}
+
+.tagline {
+  color: #5b6778;
+}
+
+.dates th,
+.dates td {
+  border: 0;
+  padding: 0 0 0 10pt;
+  width: auto;
+}
+
+.dates td {
+  font-weight: 700;
+}
+
+.parties {
+  display: flex;
+  gap: 24pt;
+}
+
+.party {
+  flex: 1;
+  background: #f4f6f9;
+  padding: 8pt 10pt;
+  border-radius: 4pt;
+}
+
+.party p {
+  margin: 0 0 2pt;
+}
+
+.fields th {
+  width: 45%;
+}
+
+.breakdown td {
+  text-align: left;
+  white-space: nowrap;
+}
+
+.breakdown tfoot th,
+.breakdown tfoot td {
+  font-weight: 700;
+  border-bottom: 0;
+  border-top: 1pt solid #1c2430;
+}
+
+.factors,
+.coverages {
+  color: #3d4757;
+  margin: 6pt 0 0;
+}
+
+.total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  background: #1f5fbf;
+  color: #fff;
+  padding: 10pt 12pt;
+  border-radius: 4pt;
+  font-size: 13pt;
+}
+
+.total strong {
+  font-size: 17pt;
+}
+
+.note {
+  color: #5b6778;
+}
+
+.disclaimer {
+  margin-top: 18pt;
+  padding-top: 6pt;
+  border-top: 0.5pt solid #c8d0db;
+  color: #5b6778;
+  font-size: 9pt;
+  text-align: center;
+}

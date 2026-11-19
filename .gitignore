@@ -12,7 +12,10 @@ dist/
 coverage/
 
 # Runtime data
+backend/data/
 storage/
 *.sqlite3
 *.db
+*.db-wal
+*.db-shm
 .env

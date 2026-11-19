@@ -1,5 +1,5 @@
 // Shapes copied from real backend responses (GET /api/products, POST /api/quotes/preview).
-import type { PreviewResponse, ProductsResponse } from "./api/types";
+import type { CreateQuoteResponse, PreviewResponse, ProductsResponse } from "./api/types";
 
 export const PRODUCTS: ProductsResponse = {
   min_premium: "500",
@@ -38,6 +38,15 @@ export const PRODUCTS: ProductsResponse = {
       coverages: [{ code: "jewelry", label_he: "תכשיטים", price_rule_he: "+300 ₪" }],
     },
   ],
+};
+
+export const CREATED: CreateQuoteResponse = {
+  quote_number: "Q-2026-000001",
+  product: "car",
+  premium: "6975",
+  issued_at: "2026-11-19T22:30:00Z",
+  valid_until: "2026-12-19T22:30:00Z",
+  download_url: null,
 };
 
 export const PREVIEW: PreviewResponse = {

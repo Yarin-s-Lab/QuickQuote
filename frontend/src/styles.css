@@ -77,20 +77,53 @@ legend {
   color: #b42318;
 }
 
-button[type="submit"] {
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.actions button {
   font: inherit;
   font-weight: 600;
   padding: 10px 28px;
-  border: 0;
   border-radius: 8px;
-  background: #1f5fbf;
-  color: #fff;
   cursor: pointer;
+  border: 1px solid #1f5fbf;
+  background: #fff;
+  color: #1f5fbf;
 }
 
-button[type="submit"]:disabled {
+.actions button.primary {
+  background: #1f5fbf;
+  color: #fff;
+}
+
+.actions button:disabled {
   opacity: 0.6;
   cursor: progress;
+}
+
+.created {
+  margin-top: 20px;
+  border-color: #2e7d4f;
+}
+
+.created h2 {
+  color: #2e7d4f;
+  margin-top: 0;
+}
+
+.created dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 0 0 8px;
+}
+
+.created dd {
+  margin: 0;
+  font-weight: 600;
 }
 
 .preview {

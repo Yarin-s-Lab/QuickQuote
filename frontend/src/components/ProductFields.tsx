@@ -74,7 +74,7 @@ export function ProductFields({ fields, values, onChange }: Props) {
               />
               {hint && (
                 <small className="hint">
-                  טווח: <bdi>{hint}</bdi>
+                  טווח: <bdi dir="ltr">{hint}</bdi>
                 </small>
               )}
             </div>

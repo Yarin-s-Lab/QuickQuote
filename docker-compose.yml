@@ -1,0 +1,34 @@
+services:
+  backend:
+    build: ./backend
+    environment:
+      FRONTEND_ORIGIN: http://localhost:8080
+    volumes:
+      - qq-data:/data
+      - qq-storage:/storage
+    # No host port: the frontend (nginx) proxies /api over the compose network.
+    # This also avoids clashing with a local `uvicorn` on :8000.
+    expose:
+      - "8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  qq-data:
+  qq-storage:

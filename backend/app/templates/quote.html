@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>הצעת מחיר {{ q.quote_number }}</title>
+  <link rel="stylesheet" href="quote.css">
+</head>
+<body>
+  <header class="brand">
+    <div class="logo"><bdi>QuickQuote</bdi></div>
+    <div class="tagline">הצעת מחיר לביטוח</div>
+  </header>
+
+  <section class="title">
+    <h1>הצעת מחיר מספר <bdi dir="ltr" class="quote-number">{{ q.quote_number }}</bdi></h1>
+    <table class="dates">
+      <tr>
+        <th>תאריך הנפקה</th>
+        <td><bdi dir="ltr" class="issued-at">{{ q.issued_at | date_he }}</bdi></td>
+        <th>בתוקף עד</th>
+        <td><bdi dir="ltr" class="valid-until">{{ q.valid_until | date_he }}</bdi></td>
+      </tr>
+    </table>
+  </section>
+
+  <section class="parties">
+    <div class="party">
+      <h2>סוכן</h2>
+      <p><bdi class="agent-name">{{ q.agent_name }}</bdi></p>
+    </div>
+    <div class="party">
+      <h2>לקוח</h2>
+      <p><bdi class="client-name">{{ q.client_full_name }}</bdi></p>
+      {% if q.client_phone %}
+      <p>טלפון: <bdi dir="ltr" class="client-phone">{{ q.client_phone }}</bdi></p>
+      {% endif %}
+      {% if q.client_email %}
+      <p>דוא"ל: <bdi dir="ltr" class="client-email">{{ q.client_email }}</bdi></p>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="product">
+    <h2>{{ q.product_label_he }}</h2>
+    <table class="fields">
+      {% for field in q.fields %}
+      <tr>
+        <th>{{ field.label_he }}</th>
+        <td><bdi{% if field.ltr %} dir="ltr"{% endif %}>{{ field.value }}</bdi></td>
+      </tr>
+      {% endfor %}
+    </table>
+    <p class="coverages">
+      כיסויים נוספים:
+      {% if q.coverages %}{{ q.coverages | join(" · ") }}{% else %}ללא{% endif %}
+    </p>
+  </section>
+
+  <section class="breakdown">
+    <h2>פירוט החישוב</h2>
+    <table>
+      <tbody>
+        {% for line in q.breakdown %}
+        <tr>
+          <th>{{ line.label_he }}</th>
+          <td><bdi dir="ltr">{{ line.amount | ils }}</bdi></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th>סה"כ לפני עיגול</th>
+          <td><bdi dir="ltr">{{ q.premium_before_rounding | ils }}</bdi></td>
+        </tr>
+      </tfoot>
+    </table>
+    <p class="factors">
+      פקטורים:
+      {% for factor in q.factors %}
+      {{ factor.label_he }} <bdi dir="ltr">{{ factor.value | factor }}</bdi>{% if not loop.last %} · {% endif %}
+      {% endfor %}
+    </p>
+  </section>
+
+  <section class="total">
+    <span>פרמיה שנתית</span>
+    <strong><bdi dir="ltr" class="premium">{{ q.premium | ils }}</bdi></strong>
+  </section>
+  {% if q.minimum_applied %}
+  <p class="note">הוחלה פרמיה מינימלית.</p>
+  {% endif %}
+
+  <footer class="disclaimer">הצעה לדוגמה — לא מחייבת.</footer>
+</body>
+</html>

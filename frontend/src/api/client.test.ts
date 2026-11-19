@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, getProducts, previewQuote } from "./client";
-import { PREVIEW, PRODUCTS } from "../test-fixtures";
+import { ApiError, createQuote, getProducts, previewQuote } from "./client";
+import { CREATED, PREVIEW, PRODUCTS } from "../test-fixtures";
 
 function mockFetch(status: number, body: unknown) {
   const fn = vi.fn().mockResolvedValue(
@@ -35,6 +35,40 @@ describe("api client", () => {
     expect(url).toBe("/api/quotes/preview");
     expect(init.method).toBe("POST");
     expect(JSON.parse(init.body)).toEqual(payload);
+  });
+
+  it("creates a quote with agent and client details", async () => {
+    const fetchMock = mockFetch(201, CREATED);
+    const payload = {
+      product: "car" as const,
+      inputs: { driver_age: 30 },
+      coverages: [],
+      agent_name: "דנה",
+      client_full_name: "ישראל",
+      client_phone: "",
+      client_email: "",
+    };
+    const data = await createQuote(payload);
+    expect(data.quote_number).toBe("Q-2026-000001");
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("/api/quotes");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body)).toEqual(payload);
+  });
+
+  it("rejects a malformed quote number from the server", async () => {
+    mockFetch(201, { ...CREATED, quote_number: "../../x" });
+    await expect(
+      createQuote({
+        product: "car",
+        inputs: {},
+        coverages: [],
+        agent_name: "a",
+        client_full_name: "b",
+        client_phone: "",
+        client_email: "",
+      }),
+    ).rejects.toMatchObject({ code: "invalid_response" });
   });
 
   it("surfaces the Hebrew message from the error envelope", async () => {
