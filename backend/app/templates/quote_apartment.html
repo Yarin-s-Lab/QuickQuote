@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+
+{% block product_css %}<link rel="stylesheet" href="quote_apartment.css">{% endblock %}
+{% block product_class %}apartment{% endblock %}
+{% block subtitle %}הצעת מחיר לביטוח דירה{% endblock %}
+
+{# House icon: Material Icons "home" (Apache License 2.0), inline, no file. #}
+{% block product_icon %}<svg class="icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>{% endblock %}
+
+{# Highlight: an alarm (it lowers the premium). #}
+{% block product_badge %}{% if q.fields_by_name["has_alarm"].value == "כן" %}<span class="badge alarm-badge">יש אזעקה</span>{% endif %}{% endblock %}
+
+{% block product_fields %}
+<div class="field-groups">
+{{ m.field_group(q, "שווי הנכס", ["structure_value", "contents_value"]) }}
+{{ m.field_group(q, "מאפייני הדירה", ["floor", "has_alarm"]) }}
+</div>
+{% endblock %}

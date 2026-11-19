@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <title>הצעת מחיר Q-2026-000001</title>
   <link rel="stylesheet" href="quote.css">
-</head>
-<body>
+<link rel="stylesheet" href="quote_apartment.css"></head>
+<body class="product-apartment">
   <header class="brand">
     <div class="logo"><bdi>QuickQuote</bdi></div>
-    <div class="tagline">הצעת מחיר לביטוח</div>
+    <div class="tagline">הצעת מחיר לביטוח דירה</div>
   </header>
 
   <section class="title">
@@ -35,25 +35,44 @@
   </section>
 
   <section class="product">
-    <h2>ביטוח דירה</h2>
+    <h2 class="product-heading">
+      <span class="product-icon"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span>
+      <span class="product-name">ביטוח דירה</span>
+<span class="badge alarm-badge">יש אזעקה</span>    </h2>
+<div class="field-groups">
+    <div class="field-group-col">
+    <h3 class="field-group">שווי הנכס</h3>
     <table class="fields">
-      <tr>
+      <tr data-field="structure_value">
         <th>שווי המבנה (₪)</th>
         <td><bdi dir="ltr">100,000 ₪</bdi></td>
       </tr>
-      <tr>
+
+      <tr data-field="contents_value">
         <th>שווי התכולה (₪)</th>
         <td><bdi dir="ltr">0 ₪</bdi></td>
       </tr>
-      <tr>
+
+    </table>
+    </div>
+
+    <div class="field-group-col">
+    <h3 class="field-group">מאפייני הדירה</h3>
+    <table class="fields">
+      <tr data-field="floor">
         <th>קומה</th>
         <td><bdi dir="ltr">0</bdi></td>
       </tr>
-      <tr>
+
+      <tr data-field="has_alarm">
         <th>יש אזעקה</th>
         <td><bdi>כן</bdi></td>
       </tr>
+
     </table>
+    </div>
+
+</div>
     <p class="coverages">
       כיסויים נוספים:
 ללא    </p>

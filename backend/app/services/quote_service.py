@@ -124,7 +124,9 @@ def _display_fields(product: Product, inputs: BaseModel) -> tuple[DocumentField,
         else:
             text = str(value)
         numeric = spec["type"] in ("money", "integer")
-        shown.append(DocumentField(label_he=spec["label_he"], value=text, ltr=numeric))
+        shown.append(
+            DocumentField(name=spec["name"], label_he=spec["label_he"], value=text, ltr=numeric)
+        )
     return tuple(shown)
 
 
@@ -192,6 +194,7 @@ class QuoteService:
                 session.flush()
 
                 document = QuoteDocument(
+                    product=product.code,
                     quote_number=quote_number,
                     product_label_he=product.label_he,
                     issued_at=issued_at,

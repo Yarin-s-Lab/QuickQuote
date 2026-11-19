@@ -1,0 +1,5 @@
+/* car: only overrides the accent variables defined in quote.css. */
+:root {
+  --accent: #1f5fbf;
+  --accent-soft: #e8eef9;
+}

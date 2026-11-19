@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <title>הצעת מחיר Q-2026-000001</title>
   <link rel="stylesheet" href="quote.css">
-</head>
-<body>
+<link rel="stylesheet" href="quote_car.css"></head>
+<body class="product-car">
   <header class="brand">
     <div class="logo"><bdi>QuickQuote</bdi></div>
-    <div class="tagline">הצעת מחיר לביטוח</div>
+    <div class="tagline">הצעת מחיר לביטוח רכב</div>
   </header>
 
   <section class="title">
@@ -37,29 +37,49 @@
   </section>
 
   <section class="product">
-    <h2>ביטוח רכב</h2>
+    <h2 class="product-heading">
+      <span class="product-icon"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg></span>
+      <span class="product-name">ביטוח רכב</span>
+<span class="badge coverage-type-badge">מקיף</span>    </h2>
+<div class="field-groups">
+    <div class="field-group-col">
+    <h3 class="field-group">פרטי הנהג</h3>
     <table class="fields">
-      <tr>
+      <tr data-field="driver_age">
         <th>גיל הנהג</th>
         <td><bdi dir="ltr">23</bdi></td>
       </tr>
-      <tr>
+
+      <tr data-field="license_years">
         <th>ותק נהיגה (שנים)</th>
         <td><bdi dir="ltr">1</bdi></td>
       </tr>
-      <tr>
-        <th>שווי הרכב (₪)</th>
-        <td><bdi dir="ltr">185,000 ₪</bdi></td>
-      </tr>
-      <tr>
+
+      <tr data-field="claims_last_3_years">
         <th>תביעות ב-3 השנים האחרונות</th>
         <td><bdi dir="ltr">1</bdi></td>
       </tr>
-      <tr>
+
+    </table>
+    </div>
+
+    <div class="field-group-col">
+    <h3 class="field-group">פרטי הרכב</h3>
+    <table class="fields">
+      <tr data-field="car_value">
+        <th>שווי הרכב (₪)</th>
+        <td><bdi dir="ltr">185,000 ₪</bdi></td>
+      </tr>
+
+      <tr data-field="coverage_type">
         <th>סוג כיסוי</th>
         <td><bdi>מקיף</bdi></td>
       </tr>
+
     </table>
+    </div>
+
+</div>
     <p class="coverages">
       כיסויים נוספים:
 גרירה · שמשות · רכב חלופי    </p>

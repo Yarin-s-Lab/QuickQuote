@@ -1,14 +1,21 @@
 <!doctype html>
+{#
+  Shared layout for every quote. Product templates (quote_car.html,
+  quote_apartment.html) extend it and fill only the product blocks.
+  Security (SPEC section 7): autoescape is on; user data enters only as variables;
+  user data is never marked safe. Resources load only through the restricted url_fetcher.
+#}
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8">
   <title>הצעת מחיר {{ q.quote_number }}</title>
   <link rel="stylesheet" href="quote.css">
+  {% block product_css %}{% endblock %}
 </head>
-<body>
+<body class="product-{% block product_class %}{% endblock %}">
   <header class="brand">
     <div class="logo"><bdi>QuickQuote</bdi></div>
-    <div class="tagline">הצעת מחיר לביטוח</div>
+    <div class="tagline">{% block subtitle %}הצעת מחיר לביטוח{% endblock %}</div>
   </header>
 
   <section class="title">
@@ -41,15 +48,12 @@
   </section>
 
   <section class="product">
-    <h2>{{ q.product_label_he }}</h2>
-    <table class="fields">
-      {% for field in q.fields %}
-      <tr>
-        <th>{{ field.label_he }}</th>
-        <td><bdi{% if field.ltr %} dir="ltr"{% endif %}>{{ field.value }}</bdi></td>
-      </tr>
-      {% endfor %}
-    </table>
+    <h2 class="product-heading">
+      <span class="product-icon">{% block product_icon %}{% endblock %}</span>
+      <span class="product-name">{{ q.product_label_he }}</span>
+      {% block product_badge %}{% endblock %}
+    </h2>
+    {% block product_fields %}{% endblock %}
     <p class="coverages">
       כיסויים נוספים:
       {% if q.coverages %}{{ q.coverages | join(" · ") }}{% else %}ללא{% endif %}
