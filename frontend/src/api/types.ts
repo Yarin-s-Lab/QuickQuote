@@ -58,11 +58,24 @@ export const previewResponseSchema = z.object({
 });
 export type PreviewResponse = z.infer<typeof previewResponseSchema>;
 
+export type CreateQuoteRequest = PreviewRequest & Parties;
+
+export const createQuoteResponseSchema = z.object({
+  quote_number: z.string().regex(/^Q-\d{4}-\d{6}$/),
+  product: productCodeSchema,
+  premium: decimalString,
+  issued_at: z.string().datetime({ offset: true }),
+  valid_until: z.string().datetime({ offset: true }),
+  /** null until secure download is added (level 3). */
+  download_url: z.string().nullable(),
+});
+export type CreateQuoteResponse = z.infer<typeof createQuoteResponseSchema>;
+
 export const apiErrorSchema = z.object({
   error: z.object({ code: z.string(), message_he: z.string() }),
 });
 
-/** Agent and client details. Collected now, sent to the backend from level 2 (POST /quotes). */
+/** Agent and client details, sent with POST /quotes (the backend validates them again). */
 export const MAX_TEXT = 100;
 export const partiesSchema = z.object({
   agent_name: z

@@ -1,4 +1,5 @@
 import type { Coverage } from "../api/types";
+import { bidiDir } from "../format";
 
 interface Props {
   coverages: Coverage[];
@@ -20,7 +21,7 @@ export function CoverageList({ coverages, selected, onToggle }: Props) {
             />
             {coverage.label_he}{" "}
             <small className="hint">
-              (<bdi>{coverage.price_rule_he}</bdi>)
+              (<bdi dir={bidiDir(coverage.price_rule_he)}>{coverage.price_rule_he}</bdi>)
             </small>
           </label>
         ))}

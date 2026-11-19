@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { PREVIEW } from "../test-fixtures";
-import { formatFactor, formatILS } from "../format";
+import { bidiDir, formatFactor, formatILS } from "../format";
 import { PremiumPreview } from "./PremiumPreview";
 
 describe("formatting", () => {
@@ -13,6 +13,15 @@ describe("formatting", () => {
     ["-100.000", "-100 ₪"],
   ])("formatILS(%s) = %s", (input, expected) => {
     expect(formatILS(input)).toBe(expected);
+  });
+
+  it.each([
+    ["+150 ₪", "ltr"],
+    ["17–90", "ltr"],
+    ["-100 ₪", "ltr"],
+    ["0.05% משווי המבנה", undefined],
+  ])("bidiDir(%s) = %s", (text, expected) => {
+    expect(bidiDir(text)).toBe(expected);
   });
 
   it("formats factors", () => {
@@ -35,6 +44,19 @@ describe("PremiumPreview", () => {
     }
     expect(screen.getByText("×1.5")).toBeInTheDocument();
     expect(screen.getByText("3,325 ₪")).toBeInTheDocument();
+  });
+
+  it("forces LTR on every amount so a negative sign never flips", () => {
+    const preview = {
+      ...PREVIEW,
+      breakdown: [...PREVIEW.breakdown, { code: "x", label_he: "הנחה", amount: "-100.000" }],
+    };
+    render(<PremiumPreview preview={preview} stale={false} />);
+    const negative = screen.getByText("-100 ₪");
+    expect(negative.tagName).toBe("BDI");
+    expect(negative).toHaveAttribute("dir", "ltr");
+    expect(screen.getByTestId("premium")).toHaveAttribute("dir", "ltr");
+    expect(screen.getByText("×1.5")).toHaveAttribute("dir", "ltr");
   });
 
   it("flags minimum premium and stale data", () => {

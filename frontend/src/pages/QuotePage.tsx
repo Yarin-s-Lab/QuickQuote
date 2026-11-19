@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { ApiError, getProducts, previewQuote } from "../api/client";
+import { ApiError, createQuote, getProducts, previewQuote } from "../api/client";
 import {
   partiesSchema,
+  type CreateQuoteResponse,
   type InputValue,
   type Parties,
   type PreviewResponse,
@@ -11,6 +12,7 @@ import {
 import { CoverageList } from "../components/CoverageList";
 import { PartiesFields, type PartiesErrors } from "../components/PartiesFields";
 import { PremiumPreview } from "../components/PremiumPreview";
+import { QuoteCreated } from "../components/QuoteCreated";
 import { ProductFields, type FieldValues } from "../components/ProductFields";
 import { ProductSelector } from "../components/ProductSelector";
 
@@ -71,6 +73,9 @@ export function QuotePage() {
   const [stale, setStale] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [created, setCreated] = useState<CreateQuoteResponse | null>(null);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
     getProducts()
@@ -104,6 +109,7 @@ export function QuotePage() {
     setCoverages([]);
     setPreview(null);
     setSubmitError(null);
+    setCreateError(null);
   }
 
   function markStale() {
@@ -126,6 +132,35 @@ export function QuotePage() {
       setSubmitError(err instanceof ApiError ? err.message : "שגיאה לא צפויה");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function onCreate() {
+    setCreateError(null);
+    if (Object.keys(allErrors).length > 0) {
+      // Show every party error, not only the fields the user already visited.
+      setTouched({
+        agent_name: true,
+        client_full_name: true,
+        client_phone: true,
+        client_email: true,
+      });
+      setCreateError("יש להשלים את פרטי הסוכן והלקוח לפני יצירת ההצעה");
+      return;
+    }
+    setCreating(true);
+    try {
+      const result = await createQuote({
+        product: product.code,
+        inputs: toInputs(product, values),
+        coverages,
+        ...parties,
+      });
+      setCreated(result);
+    } catch (err) {
+      setCreateError(err instanceof ApiError ? err.message : "שגיאה לא צפויה");
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -158,15 +193,31 @@ export function QuotePage() {
             markStale();
           }}
         />
-        <button type="submit" disabled={loading}>
-          {loading ? "מחשב…" : "חשב פרמיה"}
-        </button>
+        <div className="actions">
+          <button type="submit" disabled={loading || creating}>
+            {loading ? "מחשב…" : "חשב פרמיה"}
+          </button>
+          <button
+            type="button"
+            className="primary"
+            onClick={onCreate}
+            disabled={loading || creating}
+          >
+            {creating ? "יוצר הצעה…" : "צור הצעה"}
+          </button>
+        </div>
         {submitError && (
           <p role="alert" className="error">
             {submitError}
           </p>
         )}
+        {createError && (
+          <p role="alert" className="error">
+            {createError}
+          </p>
+        )}
       </form>
+      {created && <QuoteCreated quote={created} />}
       {preview && <PremiumPreview preview={preview} stale={stale} />}
     </main>
   );

@@ -131,13 +131,33 @@ premium = (structure_part + contents_part) × floor_factor × alarm_factor + ת�
 ### `GET /products`
 `{"min_premium": "500", "products": [{"code", "label_he", "fields": [{"name", "label_he", "type": "integer|money|boolean|enum", "required", "min", "max", "options"}], "coverages": [{"code", "label_he", "price_rule_he"}]}]}` — הטווחים נגזרים ממודלי הקלט ב-backend (מקור אמת יחיד).
 
+### `POST /quotes` (רמה 2)
+גוף: הגוף של preview ובנוסף פרטי הסוכן והלקוח:
+`agent_name`, `client_full_name` (חובה, 1–100 תווים אחרי trim) · `client_phone`, `client_email` (אופציונליים, עד 100 תווים; מחרוזת ריקה נשמרת כ-`null`). שדות לא מוכרים (למשל ת"ז) נדחים.
+
+תגובה `201`:
+```json
+{"quote_number": "Q-2026-000001", "product": "car", "premium": "7175",
+ "issued_at": "2026-11-19T08:30:00Z", "valid_until": "2026-12-19T08:30:00Z", "download_url": null}
+```
+- `download_url` הוא `null` עד רמה 3 (הורדה מאובטחת לפי טוקן). הטוקן כבר נוצר ונשמר.
+- מספור, שמירה ו-PDF בטרנזקציה אחת: כישלון ברינדור או בשמירה — אין שורה, אין קובץ, והמספר לא נצרך.
+- `503 pdf_unavailable` כשמנוע ה-PDF (WeasyPrint/Pango) לא מותקן בשרת.
+- שנת המספור ותאריכי ה-PDF לפי שעון ישראל (`Asia/Jerusalem`); הזמנים ב-API ב-UTC.
+
+### `GET /quotes/{quote_number}` (רמה 2)
+מטא-דאטה: מספר, מוצר, סוכן ולקוח, `inputs`, `coverages`, `premium`, `breakdown`, `issued_at`, `valid_until`.
+**לא** מוחזרים: `download_token`, `id`, `pdf_filename`. מספר בפורמט לא תקין או שלא קיים → `404`.
+
 ## 6. PDF
 
 - תבנית HTML אחת (`backend/app/templates/quote.html`) + CSS, מומרת ל-PDF עם WeasyPrint.
 - `<html lang="he" dir="rtl">`, גופן עברי מוטמע (Noto Sans Hebrew, מתוך `backend/app/fonts/`, נטען ב-`@font-face`).
+  - Noto Sans Hebrew **לא כולל ספרות, אותיות לטיניות ופיסוק** — לכן מוטמע גם Noto Sans (לטיני) כגופן גיבוי לכל תו. ה-image לא כולל גופני מערכת, כך שאסור שיופיע ב-PDF גופן אחר (נבדק ב-`tests/pdf`).
 - תוכן: לוגו/כותרת דמה · מספר הצעה · תאריך הנפקה ותוקף · פרטי סוכן ולקוח · מוצר וכיסויים · טבלת פירוט חישוב · פרמיה סופית · הערת "הצעה לדוגמה — לא מחייבת".
 - מספרים וסכומים בפורמט `1,234 ₪`, תאריכים `DD/MM/YYYY`.
 - מספרים ואנגלית בתוך טקסט עברי עטופים ב-`<bdi>` כדי למנוע היפוך.
+  - ערך **בלי אותיות** (סכום, טלפון, תאריך, טווח, פקטור, מספר הצעה) חייב `<bdi dir="ltr">`: עם `dir=auto` הוא יורש RTL ומתהפך (`-100 ₪` → `100-`, `+972 50…` → `…50 972+`). טקסט חופשי (שמות) נשאר `auto`. חל גם על ה-frontend.
 
 ## 7. אבטחה (מוקד)
 

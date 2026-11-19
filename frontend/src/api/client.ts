@@ -1,6 +1,9 @@
 import type { ZodType } from "zod";
 import {
   apiErrorSchema,
+  createQuoteResponseSchema,
+  type CreateQuoteRequest,
+  type CreateQuoteResponse,
   previewResponseSchema,
   productsResponseSchema,
   type PreviewRequest,
@@ -47,6 +50,14 @@ async function request<T>(path: string, schema: ZodType<T>, init?: RequestInit):
 
 export function getProducts(): Promise<ProductsResponse> {
   return request("/products", productsResponseSchema);
+}
+
+export function createQuote(payload: CreateQuoteRequest): Promise<CreateQuoteResponse> {
+  return request("/quotes", createQuoteResponseSchema, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
 }
 
 export function previewQuote(payload: PreviewRequest): Promise<PreviewResponse> {

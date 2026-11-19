@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.domain.pricing.catalog import field_labels_he
+from app.services.pdf_renderer import PdfUnavailableError
 
 _STATUS_MESSAGES_HE = {
     404: ("not_found", "המשאב לא נמצא"),
@@ -20,6 +21,10 @@ _GENERIC_LABELS_HE = {
     "product": "מוצר",
     "inputs": "נתוני המוצר",
     "coverages": "כיסויים",
+    "agent_name": "שם הסוכן",
+    "client_full_name": "שם הלקוח",
+    "client_phone": "טלפון",
+    "client_email": 'דוא"ל',
 }
 
 
@@ -58,6 +63,12 @@ def _message_he(err: dict[str, Any], labels: dict[str, str]) -> str:
         return "מוצר לא מוכר"
     elif kind == "extra_forbidden":
         text = "שדה לא מוכר"
+    elif kind == "string_too_short":
+        text = "שדה חובה"
+    elif kind == "string_pattern_mismatch":
+        text = "פורמט לא תקין"
+    elif kind == "string_type":
+        text = "יש להזין טקסט"
     elif kind == "string_too_long":
         text = f"אורך מקסימלי {ctx.get('max_length')} תווים"
     else:
@@ -80,6 +91,13 @@ def install_error_handlers(app: FastAPI) -> None:
     async def _http(_: Request, exc: StarletteHTTPException) -> JSONResponse:
         code, message = _STATUS_MESSAGES_HE.get(exc.status_code, ("http_error", "שגיאה בבקשה"))
         return JSONResponse(status_code=exc.status_code, content=error_body(code, message))
+
+    @app.exception_handler(PdfUnavailableError)
+    async def _pdf_unavailable(_: Request, __: PdfUnavailableError) -> JSONResponse:
+        return JSONResponse(
+            status_code=503,
+            content=error_body("pdf_unavailable", "יצירת PDF אינה זמינה בשרת זה"),
+        )
 
     @app.exception_handler(Exception)
     async def _unexpected(_: Request, __: Exception) -> JSONResponse:
