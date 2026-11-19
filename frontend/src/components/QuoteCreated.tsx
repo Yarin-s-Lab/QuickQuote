@@ -27,11 +27,15 @@ export function QuoteCreated({ quote }: Props) {
           </bdi>
         </dd>
       </dl>
-      {quote.download_url ? (
-        <a href={quote.download_url}>הורדת PDF</a>
-      ) : (
-        <p className="note">קובץ ה-PDF נוצר ונשמר. קישור להורדה יתווסף בהמשך.</p>
-      )}
+      <p>
+        <a className="download" href={quote.download_url} download rel="noreferrer">
+          הורדת PDF
+        </a>
+      </p>
+      <p className="note">
+        הקישור תקף עד <bdi dir="ltr">{formatDate(quote.valid_until)}</bdi> וניתן להוריד ממנו
+        שוב.
+      </p>
     </section>
   );
 }

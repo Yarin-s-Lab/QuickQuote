@@ -11,6 +11,9 @@ node_modules/
 dist/
 coverage/
 
+# Snapshot mismatch output (inspect, never commit)
+backend/tests/snapshot/.failures/
+
 # Runtime data
 backend/data/
 storage/

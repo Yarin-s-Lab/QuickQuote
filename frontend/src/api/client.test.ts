@@ -56,6 +56,25 @@ describe("api client", () => {
     expect(JSON.parse(init.body)).toEqual(payload);
   });
 
+  it.each([
+    ["path traversal", "/api/quotes/download/../../etc/passwd"],
+    ["other host", "https://evil.example/x.pdf"],
+    ["short token", "/api/quotes/download/abc"],
+  ])("rejects a download_url that is not a same-origin token link (%s)", async (_, url) => {
+    mockFetch(201, { ...CREATED, download_url: url });
+    await expect(
+      createQuote({
+        product: "car",
+        inputs: {},
+        coverages: [],
+        agent_name: "a",
+        client_full_name: "b",
+        client_phone: "",
+        client_email: "",
+      }),
+    ).rejects.toMatchObject({ code: "invalid_response" });
+  });
+
   it("rejects a malformed quote number from the server", async () => {
     mockFetch(201, { ...CREATED, quote_number: "../../x" });
     await expect(

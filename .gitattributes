@@ -1,0 +1,13 @@
+# Snapshots must be byte-stable across Windows/Linux checkouts.
+backend/tests/snapshot/__snapshots__/*.html text eol=lf
+backend/tests/snapshot/__snapshots__/*.png binary
+
+# Binaries
+*.ttf binary
+*.png binary
+*.pdf binary
+
+# Files used inside Linux containers keep LF
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.conf text eol=lf

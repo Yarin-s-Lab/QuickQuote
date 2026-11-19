@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import re
 import secrets
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel
@@ -41,7 +43,21 @@ from app.services.pdf_renderer import (
     QuoteDocument,
     format_ils,
 )
-from app.services.storage import Storage
+from app.services.storage import InvalidStoragePathError, Storage
+
+# secrets.token_urlsafe(32) -> 43 URL-safe base64 characters.
+DOWNLOAD_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{43}$")
+DOWNLOAD_PATH = "/api/quotes/download/"
+
+
+class QuoteExpiredError(Exception):
+    """The quote exists but its validity has passed (HTTP 410)."""
+
+
+@dataclass(frozen=True)
+class Download:
+    path: Path
+    quote_number: str
 
 
 def _utc_now() -> datetime:
@@ -146,6 +162,7 @@ class QuoteService:
             raise ValueError("clock must return an aware datetime")
         valid_until = issued_at + self._validity
         quote_id = self.new_id()
+        download_token = self.new_token()
         pdf_filename = self.storage.filename_for(quote_id)
 
         pdf_written = False
@@ -168,7 +185,7 @@ class QuoteService:
                         breakdown=_breakdown_json(result),
                         issued_at=issued_at,
                         valid_until=valid_until,
-                        download_token=self.new_token(),
+                        download_token=download_token,
                         pdf_filename=pdf_filename,
                     )
                 )
@@ -207,8 +224,33 @@ class QuoteService:
             premium=result.premium,
             issued_at=issued_at,
             valid_until=valid_until,
-            download_url=None,
+            download_url=DOWNLOAD_PATH + download_token,
         )
+
+    def get_download(self, token: str) -> Download | None:
+        """Resolve a download token to the PDF on disk.
+
+        Only the token is used for lookup; the path is built from the internal UUID
+        by Storage.path_for (resolve() + must stay under STORAGE_DIR). Anything else
+        - malformed token, unknown token, bad stored id, missing file - is None (404).
+        """
+        if not DOWNLOAD_TOKEN_RE.fullmatch(token):
+            return None
+        with self.sessions() as session:
+            quote = session.scalars(
+                select(Quote).where(Quote.download_token == token)
+            ).one_or_none()
+            if quote is None:
+                return None
+            if self.clock() > quote.valid_until:
+                raise QuoteExpiredError(quote.quote_number)
+            try:
+                path = self.storage.path_for(quote.id)
+            except InvalidStoragePathError:
+                return None
+            if not path.is_file():
+                return None
+            return Download(path=path, quote_number=quote.quote_number)
 
     def get_metadata(self, quote_number: str) -> QuoteMetadata | None:
         if not QUOTE_NUMBER_RE.fullmatch(quote_number):

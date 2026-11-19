@@ -46,7 +46,7 @@ export const CREATED: CreateQuoteResponse = {
   premium: "6975",
   issued_at: "2026-11-19T22:30:00Z",
   valid_until: "2026-12-19T22:30:00Z",
-  download_url: null,
+  download_url: "/api/quotes/download/" + "T".repeat(43),
 };
 
 export const PREVIEW: PreviewResponse = {

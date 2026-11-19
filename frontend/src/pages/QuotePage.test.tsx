@@ -113,7 +113,9 @@ describe("QuotePage", () => {
     expect(number).toHaveAttribute("dir", "ltr");
     // 22:30 UTC on 19/12 is already 20/12 in Israel, same rule as the PDF.
     expect(screen.getByTestId("valid-until")).toHaveTextContent("20/12/2026");
-    expect(screen.getByText(/קובץ ה-PDF נוצר ונשמר/)).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "הורדת PDF" });
+    expect(link).toHaveAttribute("href", CREATED.download_url);
+    expect(link).toHaveAttribute("rel", "noreferrer");
 
     const [url, init] = fetchMock.mock.calls[1];
     expect(url).toBe("/api/quotes");
