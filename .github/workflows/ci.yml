@@ -103,6 +103,32 @@ jobs:
           bad=$(printf 'A%.0s' $(seq 43))
           test "$(curl -s -o /dev/null -w '%{http_code}' "localhost:8080/api/quotes/download/${bad}")" = 404
           test "$(curl -s -o /dev/null -w '%{http_code}' --path-as-is "localhost:8080/api/quotes/download/..%2F..%2Fetc%2Fpasswd")" = 404
+          # Comparison: a second car quote, compare both, response must be a PDF.
+          sed 's/"driver_age": 35/"driver_age": 23/' body.json > body2.json
+          resp2=$(curl -fsS -X POST localhost:8080/api/quotes \
+            -H 'Content-Type: application/json' --data-binary @body2.json)
+          number2=$(echo "$resp2" | python3 -c 'import json,sys; print(json.load(sys.stdin)["quote_number"])')
+          token1=${url##*/}
+          token2=$(echo "$resp2" | python3 -c 'import json,sys; print(json.load(sys.stdin)["download_url"].rsplit("/",1)[1])')
+          curl -fsS -D cmp-headers.txt -o compare.pdf -X POST localhost:8080/api/quotes/compare \
+            -H 'Content-Type: application/json' \
+            --data "{\"tokens\": [\"${token1}\", \"${token2}\"]}"
+          head -c 5 compare.pdf | grep -q '%PDF-'
+          grep -qi 'content-type: application/pdf' cmp-headers.txt
+          grep -qi "filename=\"compare-${number}-${number2}.pdf\"" cmp-headers.txt
+          test "$(grep -ci '^referrer-policy:' cmp-headers.txt)" = 1
+
+          # Car vs apartment cannot be compared -> 422.
+          cat > apt.json <<'JSON'
+          {"product": "apartment",
+           "inputs": {"structure_value": 1000000, "contents_value": 0, "floor": 2, "has_alarm": false},
+           "coverages": [], "agent_name": "דנה כהן", "client_full_name": "ישראל ישראלי"}
+          JSON
+          token3=$(curl -fsS -X POST localhost:8080/api/quotes -H 'Content-Type: application/json' \
+            --data-binary @apt.json | python3 -c 'import json,sys; print(json.load(sys.stdin)["download_url"].rsplit("/",1)[1])')
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST localhost:8080/api/quotes/compare \
+            -H 'Content-Type: application/json' --data "{\"tokens\": [\"${token1}\", \"${token3}\"]}")" = 422
+
           # Raw ../ is normalised by nginx to /etc/passwd -> SPA index.html; never the file itself.
           ! curl -s --path-as-is "localhost:8080/api/quotes/download/../../../etc/passwd" | grep -q 'root:'
 

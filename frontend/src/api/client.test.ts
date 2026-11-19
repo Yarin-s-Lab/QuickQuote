@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, createQuote, getProducts, previewQuote } from "./client";
+import { ApiError, compareQuotes, createQuote, getProducts, previewQuote } from "./client";
 import { CREATED, PREVIEW, PRODUCTS } from "../test-fixtures";
 
 function mockFetch(status: number, body: unknown) {
@@ -88,6 +88,53 @@ describe("api client", () => {
         client_email: "",
       }),
     ).rejects.toMatchObject({ code: "invalid_response" });
+  });
+
+  it("compareQuotes returns the PDF blob and the server's filename", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response("%PDF-1.7", {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": 'attachment; filename="compare-Q-2026-000001-Q-2026-000002.pdf"',
+        },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const file = await compareQuotes(["a".repeat(43), "b".repeat(43)]);
+    expect(file.filename).toBe("compare-Q-2026-000001-Q-2026-000002.pdf");
+    expect(await file.blob.text()).toBe("%PDF-1.7");
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      tokens: ["a".repeat(43), "b".repeat(43)],
+    });
+  });
+
+  it("compareQuotes ignores an unexpected filename from the server", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response("%PDF", {
+          headers: {
+            "Content-Type": "application/pdf",
+            "Content-Disposition": 'attachment; filename="../../evil.exe"',
+          },
+        }),
+      ),
+    );
+    expect((await compareQuotes(["a", "b"])).filename).toBe("compare.pdf");
+  });
+
+  it("compareQuotes rejects a non-PDF success response", async () => {
+    mockFetch(200, { not: "a pdf" });
+    await expect(compareQuotes(["a", "b"])).rejects.toMatchObject({ code: "invalid_response" });
+  });
+
+  it("compareQuotes surfaces 422/404/410 messages", async () => {
+    mockFetch(422, { error: { code: "validation_error", message_he: "ניתן להשוות רק הצעות של אותו מוצר" } });
+    await expect(compareQuotes(["a", "b"])).rejects.toMatchObject({
+      code: "validation_error",
+      message: "ניתן להשוות רק הצעות של אותו מוצר",
+    });
   });
 
   it("surfaces the Hebrew message from the error envelope", async () => {

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{#
+  Two saved quotes side by side (SPEC bonus section 10). Column order follows the
+  document direction: in RTL the label column is rightmost, then the FIRST quote,
+  then the second, so the first quote is on the right.
+#}
+
+{% block title %}השוואת הצעות {{ c.quote_numbers[0] }} ו-{{ c.quote_numbers[1] }}{% endblock %}
+{% block product_css %}<link rel="stylesheet" href="{{ c.stylesheet }}">{% endblock %}
+{% block product_class %}{{ c.product }} compare{% endblock %}
+{% block subtitle %}השוואת הצעות מחיר · {{ c.product_label_he }}{% endblock %}
+
+{% block content %}
+  <section class="title">
+    <h1>השוואת הצעות מחיר</h1>
+    <p class="generated">הופק בתאריך <bdi dir="ltr" class="generated-at">{{ c.generated_at | date_he }}</bdi></p>
+  </section>
+
+  <section class="comparison">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th class="label-col"></th>
+          <th class="quote-col quote-a">הצעה א'<br><bdi dir="ltr" class="quote-number-a">{{ c.quote_numbers[0] }}</bdi></th>
+          <th class="quote-col quote-b">הצעה ב'<br><bdi dir="ltr" class="quote-number-b">{{ c.quote_numbers[1] }}</bdi></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in c.rows %}
+        <tr{% if row.differs %} class="differs"{% endif %}>
+          <th>{{ row.label_he }}</th>
+          {% for value in row.values %}
+          <td><bdi{% if row.ltr %} dir="ltr"{% endif %}>{{ value }}</bdi></td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="legend"><span class="legend-swatch"></span> שורות מודגשות: הערכים שונים בין ההצעות</p>
+  </section>
+
+  <section class="total compare-summary">
+    {% if c.cheaper is none %}
+    <span>הפרמיות זהות</span>
+    <strong><bdi dir="ltr" class="difference">{{ c.difference | ils }}</bdi></strong>
+    {% else %}
+    <span>הזולה יותר: הצעה {% if c.cheaper == 0 %}א'{% else %}ב'{% endif %} <bdi dir="ltr" class="cheaper-number">{{ c.quote_numbers[c.cheaper] }}</bdi></span>
+    <strong>הפרש <bdi dir="ltr" class="difference">{{ c.difference | ils }}</bdi></strong>
+    {% endif %}
+  </section>
+{% endblock %}

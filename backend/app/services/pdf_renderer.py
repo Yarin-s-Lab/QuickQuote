@@ -38,6 +38,17 @@ PRODUCT_TEMPLATES: Mapping[str, str] = MappingProxyType(
 )
 
 
+# Accent stylesheet per product, for documents that are not a single product quote
+# (the comparison). Same rule: fixed server-side, never from input.
+PRODUCT_STYLESHEETS: Mapping[str, str] = MappingProxyType(
+    {
+        "car": "quote_car.css",
+        "apartment": "quote_apartment.css",
+    }
+)
+COMPARE_TEMPLATE = "compare.html"
+
+
 class UnknownProductError(ValueError):
     """No template for this product code. Never fall back silently to another one."""
 
@@ -47,6 +58,13 @@ def template_for(product: str) -> str:
         return PRODUCT_TEMPLATES[product]
     except (KeyError, TypeError):
         raise UnknownProductError(f"no quote template for product {product!r}") from None
+
+
+def stylesheet_for(product: str) -> str:
+    try:
+        return PRODUCT_STYLESHEETS[product]
+    except (KeyError, TypeError):
+        raise UnknownProductError(f"no stylesheet for product {product!r}") from None
 
 
 class PdfUnavailableError(RuntimeError):
@@ -189,6 +207,31 @@ class QuoteDocument:
         return {field.name: field for field in self.fields}
 
 
+@dataclass(frozen=True)
+class ComparisonRow:
+    label_he: str
+    values: tuple[str, str]  # (first quote, second quote); first renders on the right (RTL)
+    ltr: bool = False  # numeric values: force LTR inside <bdi>
+    differs: bool = False
+
+
+@dataclass(frozen=True)
+class ComparisonDocument:
+    """Two saved quotes of the same product, side by side. All strings are untrusted."""
+
+    product: str
+    product_label_he: str
+    generated_at: datetime
+    quote_numbers: tuple[str, str]
+    rows: tuple[ComparisonRow, ...]
+    difference: Decimal  # absolute premium difference
+    cheaper: int | None  # index of the cheaper quote, None if the premiums are equal
+
+    @property
+    def stylesheet(self) -> str:
+        return stylesheet_for(self.product)
+
+
 def _build_environment() -> Environment:
     env = Environment(
         loader=FileSystemLoader(TEMPLATES_DIR),
@@ -226,3 +269,10 @@ class PdfRenderer:
 
     def render(self, document: QuoteDocument) -> bytes:
         return self.render_pdf(self.render_html(document))
+
+    def render_comparison_html(self, document: ComparisonDocument) -> str:
+        stylesheet_for(document.product)  # unknown product fails before rendering
+        return self._env.get_template(COMPARE_TEMPLATE).render(c=document)
+
+    def render_comparison(self, document: ComparisonDocument) -> bytes:
+        return self.render_pdf(self.render_comparison_html(document))

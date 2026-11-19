@@ -15,7 +15,7 @@ from pydantic import TypeAdapter
 
 from app.api.schemas import CreateQuoteRequest
 from app.db.session import Database
-from app.services.pdf_renderer import PdfRenderer, QuoteDocument
+from app.services.pdf_renderer import ComparisonDocument, PdfRenderer, QuoteDocument
 from app.services.quote_service import QuoteService
 from app.services.storage import Storage
 from tests.conftest import FIXED_NOW
@@ -56,6 +56,23 @@ SAMPLES = {
     },
 }
 
+# Second car quote for the comparison snapshot: older driver, fewer add-ons, other client.
+COMPARE_SECOND = {
+    "product": "car",
+    "inputs": {
+        "driver_age": 35,
+        "license_years": 8,
+        "car_value": 185_000,
+        "claims_last_3_years": 0,
+        "coverage_type": "comprehensive",
+    },
+    "coverages": ["towing"],
+    "agent_name": "דנה כהן",
+    "client_full_name": "ישראל ישראלי",
+}
+COMPARE_IDS = (FIXED_ID, "00000000-0000-4000-8000-000000000002")
+COMPARE_TOKENS = (FIXED_TOKEN, "U" * 43)
+
 _REQUEST = TypeAdapter(CreateQuoteRequest)
 
 
@@ -72,6 +89,11 @@ class CapturingRenderer(PdfRenderer):
     def render(self, document: QuoteDocument) -> bytes:
         self.document = document
         self.html = self.render_html(document)
+        self.pdf = self.render_pdf(self.html) if self.real_pdf else b"%PDF-snapshot"
+        return self.pdf
+
+    def render_comparison(self, document: ComparisonDocument) -> bytes:
+        self.html = self.render_comparison_html(document)
         self.pdf = self.render_pdf(self.html) if self.real_pdf else b"%PDF-snapshot"
         return self.pdf
 
@@ -104,6 +126,39 @@ def render_sample(tmp_path):
         )
         try:
             service.create(_REQUEST.validate_python(SAMPLES[name]))
+        finally:
+            db.dispose()
+        assert renderer.html is not None
+        return RenderedQuote(html=renderer.html, pdf=renderer.pdf if real_pdf else None)
+
+    return render
+
+
+@pytest.fixture
+def render_comparison(tmp_path):
+    """Create the two pinned car quotes, then compare them (first = SAMPLES["car"])."""
+
+    runs = iter(range(1_000))
+
+    def render(*, real_pdf: bool = False) -> RenderedQuote:
+        run_dir = tmp_path / f"compare-{next(runs)}"  # fresh DB: always quotes 1 and 2
+        db = Database(f"sqlite:///{run_dir / 'quotes.db'}")
+        db.create_all()
+        renderer = CapturingRenderer(real_pdf=False)  # the two quotes: HTML only
+        ids, tokens = iter(COMPARE_IDS), iter(COMPARE_TOKENS)
+        service = QuoteService(
+            sessions=db.sessionmaker,
+            storage=Storage(run_dir / "storage"),
+            renderer=renderer,
+            clock=lambda: FIXED_NOW,
+            new_id=lambda: next(ids),
+            new_token=lambda: next(tokens),
+        )
+        try:
+            service.create(_REQUEST.validate_python(SAMPLES["car"]))
+            service.create(_REQUEST.validate_python(COMPARE_SECOND))
+            renderer.real_pdf = real_pdf
+            service.compare(list(COMPARE_TOKENS))
         finally:
             db.dispose()
         assert renderer.html is not None

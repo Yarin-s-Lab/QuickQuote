@@ -3,9 +3,10 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 
 from app.api.schemas import (
+    CompareRequest,
     CreateQuoteRequest,
     CreateQuoteResponse,
     PreviewRequest,
@@ -44,6 +45,21 @@ def preview_quote(request: PreviewRequest) -> PreviewResponse:
 @router.post("/quotes", response_model=CreateQuoteResponse, status_code=201)
 def create_quote(request: CreateQuoteRequest, service: Service) -> CreateQuoteResponse:
     return service.create(request)
+
+
+@router.post("/quotes/compare", response_class=Response)
+def compare_quotes(request: CompareRequest, service: Service) -> Response:
+    comparison = service.compare(request.tokens)
+    return Response(
+        content=comparison.pdf,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{comparison.filename}"',
+            "Cache-Control": "no-store",
+            "Referrer-Policy": "no-referrer",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @router.get("/quotes/download/{token}", response_class=FileResponse)
